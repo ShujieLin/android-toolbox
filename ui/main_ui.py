@@ -39,13 +39,15 @@ class MainWindow(QMainWindow):
         
         # 操作按钮
         self.refresh_btn = QPushButton('refresh devices')
+        self.pull_one_type_one_day_logs_btn = QPushButton('pull one type one day logs')
         # self.screenshot_btn = QPushButton('屏幕截图')
         # self.install_btn = QPushButton('安装APK')
         # self.logcat_btn = QPushButton('查看日志')
         logging.debug('Buttons created')
 
         for btn in [
-                    self.refresh_btn
+                    self.refresh_btn,
+                    self.pull_one_type_one_day_logs_btn
                    ]:
             left_panel.addWidget(btn)
             btn.setMinimumHeight(40)
