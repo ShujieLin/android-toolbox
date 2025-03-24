@@ -1,0 +1,21 @@
+# Python 编译文件
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 打包文件
+*.egg
+*.egg-info/
+dist/
+build/
+
+# 日志文件
+*.log
+
+# 本地配置文件
+.env
+.env.local
+
+# IDE相关
+.vscode/
+.idea/
