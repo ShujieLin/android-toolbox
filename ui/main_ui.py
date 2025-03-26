@@ -1,6 +1,7 @@
 # Add these at the top (before other imports)
 import sys
 import os
+import json
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Then modify the problematic import
@@ -19,7 +20,10 @@ class MainWindow(QMainWindow):
         self.adb_tools = adb_tools
 
     def _init_datas(self):
-        self.log_save_path = os.path.expanduser("~\\Documents")  # 默认保存到文档目录
+        self.config_path = os.path.expanduser("~/.AndroidDevTools/config.json")
+        self._load_config()
+        if not hasattr(self, 'log_save_path'):
+            self.log_save_path = os.path.expanduser("~\\Documents")  # 默认保存到文档目录
 
     def initUI(self):
         self.setWindowTitle('ADB Tool - power by linshujie')
@@ -81,6 +85,27 @@ class MainWindow(QMainWindow):
         main_layout.addLayout(self.left_panel, 1)
         main_layout.addWidget(self.log_output, 3)
 
+    def _load_config(self):
+        """加载配置文件"""
+        try:
+            if os.path.exists(self.config_path):
+                logging.info(f"加载配置文件: {self.config_path}")
+                with open(self.config_path, 'r') as f:
+                    config = json.load(f)
+                    self.log_save_path = config.get('log_save_path', os.path.expanduser("~\\Documents"))
+                    logging.info(f"日志保存路径: {self.log_save_path}")
+        except Exception as e:
+            print(f"加载配置文件失败: {e}")
+
+    def _save_config(self):
+        """保存配置文件"""
+        try:
+            os.makedirs(os.path.dirname(self.config_path), exist_ok=True)
+            with open(self.config_path, 'w') as f:
+                json.dump({'log_save_path': self.log_save_path}, f)
+                logging.info(f"配置已保存到: {self.config_path}")
+        except Exception as e:
+            print(f"保存配置文件失败: {e}")
     
     def init_explorer(self):
         """ 初始化文件浏览器 """
@@ -122,4 +147,5 @@ class MainWindow(QMainWindow):
         if path:
             self.log_save_path = path
             self.log_path_edit.setText(path)
+            self._save_config()  # 保存新路径
         return path

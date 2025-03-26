@@ -37,22 +37,3 @@ class ADBTools:
         except subprocess.CalledProcessError as e:
             logging.error(f"ADB error: {e}")
             return []
-
-    def select_device_path(self, path):
-        """Set working path on device"""
-        self.current_path = path
-        logging.info(f"Selected path: {path}")
-
-    def list_device_files(self):
-        """List files at current path on selected device"""
-        if not self.selected_device:
-            logging.error("No device selected")
-            return []
-            
-        try:
-            cmd = ['adb', '-s', self.selected_device, 'shell', 'ls', self.current_path]
-            result = subprocess.check_output(cmd, text=True)
-            return result.splitlines()
-        except subprocess.CalledProcessError as e:
-            logging.error(f"File list error: {e}")
-            return []
