@@ -13,20 +13,24 @@ class DeviceController(QObject):
     # 添加设备列表更新信号
     signal_pull_one_type_one_day_logs = pyqtSignal(str, str, str)
 
-    def __init__(self, adb_tools: ADBTools = None, ui: MainWindow = None):
+    def __init__(self):
         super().__init__()  # 调用父类的构造函数
-        self.adb_tools =adb_tools
-        self.ui = ui
+        self.adb_tools = ADBTools()
+        self.ui = MainWindow(self.adb_tools)
         if self.ui:
-            # self._connect_signals() 
             self._init_ui() # 初始化UI
+            self._init_others()
 
     def _init_ui(self):
         self.ui.refresh_btn.clicked.connect(self.handle_refresh_devices)
         self.ui.pull_one_type_one_day_logs_btn.clicked.connect(self.pull_one_type_one_day_logs)
+        self.ui.browse_btn.clicked.connect(self.get_selected_explorer_path)
 
-         
-    # def _connect_signals(self):
+    def _init_others(self):
+        logging.info(f"默认保存路径: {self.ui.log_save_path}")
+
+    def get_selected_explorer_path(self):
+        logging.info(f"选择的保存路径: {self.ui.log_save_path}")
 
         
     # 这里有两个作用，一个是分离adb_tools的耦合。另一个是分离ui的耦合。
@@ -54,6 +58,6 @@ class DeviceController(QObject):
 class AppRunner:
     def run(self):
         app = QApplication(sys.argv)
-        controller = DeviceController(ADBTools(), MainWindow())
+        controller = DeviceController()
         controller.ui.show()
         sys.exit(app.exec_())

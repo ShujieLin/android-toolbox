@@ -12,12 +12,14 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %
 
 # UI层 (MainWindow)：只负责界面展示和事件触发
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self,adb_tools):
         super().__init__()
-        self.log_save_path = os.path.expanduser("~\\Documents")  # 默认保存到文档目录
+        self._init_datas()
         self.initUI()
+        self.adb_tools = adb_tools
 
-
+    def _init_datas(self):
+        self.log_save_path = os.path.expanduser("~\\Documents")  # 默认保存到文档目录
 
     def initUI(self):
         self.setWindowTitle('ADB Tool - power by linshujie')
@@ -89,13 +91,13 @@ class MainWindow(QMainWindow):
         self.log_path_edit.setMaximumHeight(30)
         self.log_path_edit.setText(self.log_save_path)
         
-        browse_btn = QPushButton("...")
-        browse_btn.clicked.connect(self.choose_log_path)
-        browse_btn.setMaximumWidth(30)
+        self.browse_btn = QPushButton("...")
+        self.browse_btn.clicked.connect(self.choose_log_path)
+        self.browse_btn.setMaximumWidth(30)
 
         log_path_layout.addWidget(QLabel("日志路径:"))
         log_path_layout.addWidget(self.log_path_edit)
-        log_path_layout.addWidget(browse_btn)
+        log_path_layout.addWidget(self.browse_btn)
         self.left_panel.addLayout(log_path_layout)
 
 
@@ -116,6 +118,8 @@ class MainWindow(QMainWindow):
     def choose_log_path(self):
         """选择日志保存路径"""
         path = QFileDialog.getExistingDirectory(self, "选择日志保存目录", self.log_save_path)
+        logging.info("Choosing log path:%s",path)
         if path:
             self.log_save_path = path
             self.log_path_edit.setText(path)
+        return path
