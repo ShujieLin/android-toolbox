@@ -27,6 +27,7 @@ class DeviceController(QObject):
         self.ui.browse_btn.clicked.connect(self.get_selected_explorer_path)
 
     def _init_others(self):
+        self.handle_refresh_devices()
         logging.info(f"默认保存路径: {self.ui.log_save_path}")
 
     def get_selected_explorer_path(self):
