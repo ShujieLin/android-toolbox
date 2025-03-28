@@ -25,6 +25,8 @@ class DeviceController(QObject):
         self.ui.refresh_btn.clicked.connect(self.handle_refresh_devices)
         self.ui.pull_one_type_one_day_logs_btn.clicked.connect(self.pull_one_type_one_day_logs)
         self.ui.browse_btn.clicked.connect(self.get_selected_explorer_path)
+             # 添加点击事件
+        self.ui.multi_select_list.itemSelectionChanged.connect(self.handle_multi_select_list_selection_changed)
 
     def _init_others(self):
         self.handle_refresh_devices()
@@ -34,6 +36,11 @@ class DeviceController(QObject):
         logging.info(f"选择的保存路径: {self.ui.log_save_path}")
 
         
+    def handle_multi_select_list_selection_changed(self):
+        """处理多选列表选择变化"""
+        selected_items = [item.text() for item in self.ui.multi_select_list.selectedItems()]
+        logging.info(f"Selected items: {selected_items}")
+
     # 这里有两个作用，一个是分离adb_tools的耦合。另一个是分离ui的耦合。
     def handle_refresh_devices(self):
         logging.info("Handling device refresh")

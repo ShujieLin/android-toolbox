@@ -55,12 +55,8 @@ class MainWindow(QMainWindow):
         # 日志导出路径
         self.init_explorer()
 
-        # 新增多选列表（放在设备列表下方）
-        self.multi_select_list = QListWidget()
-        self.multi_select_list.setSelectionMode(QListWidget.MultiSelection)  # 设置为多选模式
-        self.multi_select_list.addItems([f"Item {i+1}" for i in range(6)])  # 添加6个测试项
-        self.left_panel.addWidget(QLabel("可选项目:"))
-        self.left_panel.addWidget(self.multi_select_list)
+        self.init_multi_select_list()
+
         
         # 操作按钮
         self.refresh_btn = QPushButton('refresh devices')
@@ -84,6 +80,15 @@ class MainWindow(QMainWindow):
         # 布局组合
         main_layout.addLayout(self.left_panel, 1)
         main_layout.addWidget(self.log_output, 3)
+
+    def init_multi_select_list(self):
+              # 新增多选列表（放在设备列表下方）
+        self.multi_select_list = QListWidget()
+        self.multi_select_list.setSelectionMode(QListWidget.MultiSelection)  # 设置为多选模式
+        self.multi_select_list.addItems([f"Item {i+1}" for i in range(6)])  # 添加6个测试项
+        self.left_panel.addWidget(QLabel("可选项目:"))
+        self.left_panel.addWidget(self.multi_select_list)
+   
 
     def _load_config(self):
         """加载配置文件"""
