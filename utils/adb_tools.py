@@ -1,5 +1,6 @@
 import subprocess
 import logging
+import threading
 
 # 为 ADBTools 类创建独立的日志记录器
 logger = logging.getLogger('ADBTools')
@@ -9,27 +10,6 @@ class ADBTools:
     def __init__(self):
         self.selected_device = None
         self.current_path = "/"
-
-    def pull_one_type_one_day_logs(self, device, log_type, date):
-        """Pull logs of one type for one day from device"""
-        try:
-            logging.info(f"Pulling logs for {device} on {date}")
-
-            # 构建日志文件的通配符模式
-            log_pattern = f"/sdcard/pudu/log/{log_type}.g3log.{date}*"
-            # 构建用于查找日志文件的 ADB 命令
-            list_cmd = ['adb', '-s', device, 'shell', 'ls', log_pattern]
-            # 执行查找命令并获取输出
-            list_result = subprocess.check_output(list_cmd, text=True)
-            # 遍历找到的每个日志文件
-            for log_file in list_result.splitlines():
-                # 构建拉取文件的 ADB 命令
-                pull_cmd = ['adb', '-s', device, 'pull', log_file, '.']
-                # 执行拉取命令
-                subprocess.check_output(pull_cmd)
-            logging.info(f"Successfully pulled logs for {device} on {date}")
-        except subprocess.CalledProcessError as e:
-            logging.error(f"ADB error while pulling logs: {e}")
 
     def get_connected_devices(self):
         logging.info("Getting connected devices")
@@ -138,3 +118,101 @@ class ADBTools:
     def get_log_categorys(self,device):
         file_names = self.list_files_in_log_dir(device)
         return self.filter_logs_by_category(file_names)
+    
+
+    def set_selected_log_categorys(self,selected_items):
+        self.selected_log_categorys = selected_items
+        logging.info(f"Selected log categories: {self.selected_log_categorys}")
+
+
+    def pull_one_type_one_day_logs(self, device, log_type, date):
+        """Pull logs of one type for one day from device"""
+        try:
+            logging.info(f"Pulling logs for {device}")
+
+            # 构建日志文件的通配符模式
+            log_pattern = f"/sdcard/pudu/log/{log_type}.g3log.{date}*"
+
+            # 构建用于查找日志文件的 ADB 命令
+            list_cmd = ['adb', '-s', device, 'shell', 'ls', log_pattern]
+            # 执行查找命令并获取输出
+            list_result = subprocess.check_output(list_cmd, text=True)
+            # 遍历找到的每个日志文件
+            for log_file in list_result.splitlines():
+                # 构建拉取文件的 ADB 命令
+                pull_cmd = ['adb', '-s', device, 'pull', log_file, '.']
+                # 执行拉取命令
+                subprocess.check_output(pull_cmd)
+            logging.info(f"Successfully pulled logs for {device} on {date}")
+        except subprocess.CalledProcessError as e:
+            logging.error(f"ADB error while pulling logs: {e}")
+
+
+    def pull_all_logs_for_selected_items(self):
+        """Pull all logs for selected items"""
+        if not self.selected_log_categorys:
+            logging.info("No log categories selected")
+            return
+
+        devices = self.get_connected_devices()
+        if not devices:
+            logging.error("No connected devices found.")
+            return
+
+        device = devices[0]  # 选择第一个连接的设备
+        log_dir = "/sdcard/pudu/log"
+
+        for log_type in self.selected_log_categorys:
+            try:
+                # 构建日志文件的通配符模式
+                log_pattern = f"{log_dir}/{log_type}.g3log.*.pdlog"
+                # 构建用于查找日志文件的 ADB 命令
+                list_cmd = ['adb', '-s', device, 'shell', 'ls', log_pattern]
+                # 执行查找命令并获取输出
+                list_result = subprocess.check_output(list_cmd, text=True)
+                # 遍历找到的每个日志文件
+                for log_file in list_result.splitlines():
+                    # 构建拉取文件的 ADB 命令
+                    pull_cmd = ['adb', '-s', device, 'pull', log_file, '.']
+                    # 执行拉取命令
+                    subprocess.check_output(pull_cmd)
+                logging.info(f"Successfully pulled logs for {log_type}")
+            except subprocess.CalledProcessError as e:
+                logging.error(f"ADB error while pulling {log_type} logs: {e}")
+
+
+    def pull_all_logs_in_thread(self, device, pattern):
+        """在子线程中执行 pull_all_logs_for_selected_items 方法"""
+        thread = threading.Thread(target=self.pull_logs_by_pattern, kwargs={'device': device, 'pattern': pattern})
+        thread.start()
+
+
+    def pull_logs_by_pattern(self, device, pattern):
+        """
+        根据指定的文件模式从设备中拉取日志文件到当前目录。
+
+        :param device: 要执行命令的设备 ID
+        :param pattern: 日志文件的通配符模式，例如 '/sdcard/pudu/log/SpeechService.g3log.20241202*'
+        """
+        try:
+            logging.info(f"Pulling logs matching pattern: {pattern}")
+            # 构建用于查找日志文件的 ADB 命令
+            list_cmd = ['adb', '-s', device, 'shell', 'ls', pattern]
+            # 执行查找命令并获取输出
+            list_result = subprocess.check_output(list_cmd, text=True)
+            # 遍历找到的每个日志文件
+            for log_file in list_result.splitlines():
+                log_file = log_file.strip()
+                if log_file:
+                    # 构建拉取文件的 ADB 命令
+                    pull_cmd = ['adb', '-s', device, 'pull', log_file, self.selected_windows_path]
+                    logging.info(f"Pulling file: {log_file}")
+                    # 执行拉取命令
+                    subprocess.check_output(pull_cmd)
+            logging.info(f"Successfully pulled logs matching pattern: {pattern}")
+        except subprocess.CalledProcessError as e:
+            logging.error(f"ADB error while pulling logs matching pattern {pattern}: {e}")
+
+    def set_selected_windows_path(self, path):
+        self.selected_windows_path = path
+        logging.info(f"Selected Windows path: {self.selected_windows_path}")

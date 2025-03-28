@@ -38,16 +38,9 @@ class MainWindow(QMainWindow):
         self.left_panel = QVBoxLayout()
         logging.debug('Left panel created')
 
-        
-        # 设备列表
-        self.device_list = QListWidget()
-        # 设备列表（动态计算三行高度）
-        self.device_list = QListWidget()
-        font_metrics = self.device_list.fontMetrics()
-        line_height = font_metrics.height() + 4  # 增加间距
-        self.device_list.setFixedHeight(line_height * 3)
-        self.left_panel.addWidget(self.device_list)
-        logging.debug('Device list created')
+    
+        self.__init_multi_select_list_part()
+       
 
         # 日志导出路径
         self.init_explorer()
@@ -55,16 +48,13 @@ class MainWindow(QMainWindow):
         self.init_multi_select_list()
 
         
-        # 操作按钮
-        self.refresh_btn = QPushButton('refresh devices')
+    
+        self.pull_all_logs_btn = QPushButton('pull all logs for selected items')
         self.pull_one_type_one_day_logs_btn = QPushButton('pull one type one day logs')
-        # self.screenshot_btn = QPushButton('屏幕截图')
-        # self.install_btn = QPushButton('安装APK')
-        # self.logcat_btn = QPushButton('查看日志')
         logging.debug('Buttons created')
 
         for btn in [
-                    self.refresh_btn,
+                    self.pull_all_logs_btn,
                     self.pull_one_type_one_day_logs_btn
                    ]:
             self.left_panel.addWidget(btn)
@@ -77,6 +67,23 @@ class MainWindow(QMainWindow):
         # 布局组合
         main_layout.addLayout(self.left_panel, 1)
         main_layout.addWidget(self.log_output, 3)
+
+    def __init_multi_select_list_part(self):
+        """
+        初始化设备列表和刷新按钮，并添加到左侧控制面板。
+        """
+        # 设备列表
+        self.device_list = QListWidget()
+        # 设备列表（动态计算三行高度）
+        font_metrics = self.device_list.fontMetrics()
+        line_height = font_metrics.height() + 4  # 增加间距
+        self.device_list.setFixedHeight(line_height * 3)
+        self.left_panel.addWidget(self.device_list)
+        logging.debug('Device list created')
+        # 操作按钮
+        self.refresh_btn = QPushButton('refresh devices')
+        self.left_panel.addWidget(self.refresh_btn)
+
 
     def init_multi_select_list(self):
               # 新增多选列表（放在设备列表下方）

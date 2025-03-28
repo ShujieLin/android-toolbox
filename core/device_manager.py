@@ -5,6 +5,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.adb_tools import ADBTools
 from ui.main_ui import MainWindow
 import logging
+import threading
 from PyQt5.QtCore import pyqtSignal,QObject  
 from PyQt5.QtWidgets import QApplication
 
@@ -21,8 +22,9 @@ class DeviceController(QObject):
         self.adb_tools = ADBTools()
         self.ui = MainWindow(self.adb_tools)
         if self.ui:
-            self._init_ui_event() # 初始化UI
             self._init_others()
+            self._init_ui_event() # 初始化UI
+          
 
     def _init_ui_event(self):
         self.ui.refresh_btn.clicked.connect(self.handle_refresh_devices)
@@ -30,22 +32,33 @@ class DeviceController(QObject):
         self.ui.browse_btn.clicked.connect(self.get_selected_explorer_path)
         # 添加点击事件
         self.ui.multi_select_list.itemSelectionChanged.connect(self.handle_multi_select_list_selection_changed)
+     
+        self.ui.pull_all_logs_btn.clicked.connect(self._pull_all_logs_wrapper)
 
     def _init_others(self):
         self.handle_refresh_devices()
         logging.info(f"默认保存路径: {self.ui.log_save_path}")
+        self.adb_tools.set_selected_windows_path(self.ui.log_save_path)
         log_categorys = []
         log_categorys = self.adb_tools.get_log_categorys(self.devices[0])
         self.ui.update_multi_select_list(log_categorys)
 
+    
+    def _pull_all_logs_wrapper(self):
+        pattern = '/sdcard/pudu/log/SpeechService.g3log.20250327*'
+        self.adb_tools.pull_all_logs_in_thread(self.devices[0], pattern) 
+
     def get_selected_explorer_path(self):
         logging.info(f"选择的保存路径: {self.ui.log_save_path}")
+        self.adb_tools.set_selected_windows_path(self.ui.log_save_path)
 
         
     def handle_multi_select_list_selection_changed(self):
         """处理多选列表选择变化"""
         selected_items = [item.text() for item in self.ui.multi_select_list.selectedItems()]
         logging.info(f"Selected items: {selected_items}")
+        # 把选中的日志类型传递给adb_tools
+        self.adb_tools.set_selected_log_categorys(selected_items)
 
     # 这里有两个作用，一个是分离adb_tools的耦合。另一个是分离ui的耦合。
     def handle_refresh_devices(self):
