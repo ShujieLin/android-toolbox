@@ -1,9 +1,17 @@
 import sys
 import os
+import logging
 # 将项目根目录添加到系统路径，确保可以找到其他模块
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core.device_manager import AppRunner
+# Configure logging
+# logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s %(filename)s %(name)s %(levelname)s : %(message)s'
+)
 
 # __name__ 变量：
 # 当 Python 文件被直接运行时，__name__ 的值是 "__main__"。

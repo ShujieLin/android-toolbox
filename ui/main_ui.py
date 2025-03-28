@@ -8,9 +8,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import logging
 from PyQt5.QtWidgets import  QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QListWidget, QPushButton, QTextEdit,QLabel,QFileDialog
 
-# Configure logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
-
 # UI层 (MainWindow)：只负责界面展示和事件触发
 class MainWindow(QMainWindow):
     def __init__(self,adb_tools):
@@ -85,11 +82,15 @@ class MainWindow(QMainWindow):
               # 新增多选列表（放在设备列表下方）
         self.multi_select_list = QListWidget()
         self.multi_select_list.setSelectionMode(QListWidget.MultiSelection)  # 设置为多选模式
-        self.multi_select_list.addItems([f"Item {i+1}" for i in range(6)])  # 添加6个测试项
         self.left_panel.addWidget(QLabel("可选项目:"))
         self.left_panel.addWidget(self.multi_select_list)
-   
 
+    def update_multi_select_list(self, items):
+        # 清空列表
+        self.multi_select_list.clear()
+        # 直接将 items 中的元素逐个添加到列表中
+        self.multi_select_list.addItems(items)  
+   
     def _load_config(self):
         """加载配置文件"""
         try:

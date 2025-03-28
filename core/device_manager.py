@@ -8,6 +8,9 @@ import logging
 from PyQt5.QtCore import pyqtSignal,QObject  
 from PyQt5.QtWidgets import QApplication
 
+# 为类创建独立的日志记录器
+logger = logging.getLogger('DeviceController')
+
 #业务层 (DeviceController)：处理事件响应和逻辑协调
 class DeviceController(QObject):
     # 添加设备列表更新信号
@@ -18,19 +21,22 @@ class DeviceController(QObject):
         self.adb_tools = ADBTools()
         self.ui = MainWindow(self.adb_tools)
         if self.ui:
-            self._init_ui() # 初始化UI
+            self._init_ui_event() # 初始化UI
             self._init_others()
 
-    def _init_ui(self):
+    def _init_ui_event(self):
         self.ui.refresh_btn.clicked.connect(self.handle_refresh_devices)
         self.ui.pull_one_type_one_day_logs_btn.clicked.connect(self.pull_one_type_one_day_logs)
         self.ui.browse_btn.clicked.connect(self.get_selected_explorer_path)
-             # 添加点击事件
+        # 添加点击事件
         self.ui.multi_select_list.itemSelectionChanged.connect(self.handle_multi_select_list_selection_changed)
 
     def _init_others(self):
         self.handle_refresh_devices()
         logging.info(f"默认保存路径: {self.ui.log_save_path}")
+        log_categorys = []
+        log_categorys = self.adb_tools.get_log_categorys(self.devices[0])
+        self.ui.update_multi_select_list(log_categorys)
 
     def get_selected_explorer_path(self):
         logging.info(f"选择的保存路径: {self.ui.log_save_path}")
@@ -46,10 +52,10 @@ class DeviceController(QObject):
         logging.info("Handling device refresh")
         """处理设备刷新操作"""
         try:
-            devices = self.adb_tools.get_connected_devices()
-            logging.info(f"Found {len(devices)} devices")
-            self.ui.update_device_list(devices) # 调用UI的方法
-            logging.info(f"已刷新 {len(devices)} 个设备")
+            self.devices = self.adb_tools.get_connected_devices()
+            logging.info(f"Found {len(self.devices)} devices")
+            self.ui.update_device_list(self.devices) # 调用UI的方法
+            logging.info(f"已刷新 {len(self.devices)} 个设备")
         except Exception as e:
             logging.error(f"刷新设备失败: {str(e)}")
 
