@@ -4,6 +4,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.adb_tools import ADBTools
 from ui.main_ui import MainWindow
+from core.log_category_manager import LogCategoryManager
 import logging
 import threading
 from PyQt5.QtCore import pyqtSignal,QObject  
@@ -21,6 +22,7 @@ class DeviceController(QObject):
         super().__init__()  # 调用父类的构造函数
         self.adb_tools = ADBTools()
         self.ui = MainWindow(self.adb_tools)
+        self.log_category_manager = LogCategoryManager(self.adb_tools) 
         if self.ui:
             self._init_others()
             self._init_ui_event() # 初始化UI
@@ -28,25 +30,43 @@ class DeviceController(QObject):
 
     def _init_ui_event(self):
         self.ui.refresh_btn.clicked.connect(self.handle_refresh_devices)
-        self.ui.pull_one_type_one_day_logs_btn.clicked.connect(self.pull_one_type_one_day_logs)
+   
         self.ui.browse_btn.clicked.connect(self.get_selected_explorer_path)
         # 添加点击事件
         self.ui.multi_select_list.itemSelectionChanged.connect(self.handle_multi_select_list_selection_changed)
      
-        self.ui.pull_all_logs_btn.clicked.connect(self._pull_all_logs_wrapper)
+        self.ui.pull_one_type_one_day_logs_btn.clicked.connect(self.pull_selected_logs_1_day)
+        
 
     def _init_others(self):
         self.handle_refresh_devices()
         logging.info(f"默认保存路径: {self.ui.log_save_path}")
         self.adb_tools.set_selected_windows_path(self.ui.log_save_path)
-        log_categorys = []
-        log_categorys = self.adb_tools.get_log_categorys(self.devices[0])
-        self.ui.update_multi_select_list(log_categorys)
+        self.log_categorys = []
+        self.log_categorys = self.adb_tools.get_log_categorys(self.devices[0])
+        self.ui.update_multi_select_list(self.log_categorys)
 
+    def pull_all_logs_wrapper(self):
+        self.log_category_manager.pull_all_logs_wrapper(self.devices[0])
     
-    def _pull_all_logs_wrapper(self):
-        pattern = '/sdcard/pudu/log/SpeechService.g3log.20250327*'
-        self.adb_tools.pull_all_logs_in_thread(self.devices[0], pattern) 
+    def pull_selected_logs_1_day(self):
+        try:
+            logging.info("Entering pull_selected_logs_1_day method")
+
+            if not self.devices:
+                logging.error("No devices connected")
+                return
+            
+            # 获取填写的日期
+            self.date = self.ui.date_edit.text()
+            if not self.date:
+                logging.error("No date selected")
+                return
+            
+            logging.info("Pulling logs for selected items")
+            self.log_category_manager.pull_selected_logs_1_day(self.devices[0],self.log_categorys,self.date)
+        except Exception as e:
+            logging.error(f"拉取日志失败: {str(e)}")
 
     def get_selected_explorer_path(self):
         logging.info(f"选择的保存路径: {self.ui.log_save_path}")
@@ -71,15 +91,6 @@ class DeviceController(QObject):
             logging.info(f"已刷新 {len(self.devices)} 个设备")
         except Exception as e:
             logging.error(f"刷新设备失败: {str(e)}")
-
-    def pull_one_type_one_day_logs(self):
-        logging.info("Handling pull one type one day logs")
-        try:
-            
-            self.adb_tools.pull_one_type_one_day_logs(self.adb_tools.get_connected_devices()[0],"SpeechService","20250324")
-        except Exception as e:
-            logging.error(f"拉取日志失败: {str(e)}")
-
 
 # 新增的类，用于运行应用程序
 class AppRunner:

@@ -6,7 +6,11 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Then modify the problematic import
 import logging
-from PyQt5.QtWidgets import  QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QListWidget, QPushButton, QTextEdit,QLabel,QFileDialog
+from datetime import datetime
+from PyQt5.QtWidgets import  QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QListWidget, QPushButton, QTextEdit,QLabel,QFileDialog,QLineEdit
+from PyQt5.QtGui import QRegExpValidator
+from PyQt5.QtCore import QRegExp
+
 
 # UI层 (MainWindow)：只负责界面展示和事件触发
 class MainWindow(QMainWindow):
@@ -44,6 +48,7 @@ class MainWindow(QMainWindow):
 
         # 日志导出路径
         self.init_explorer()
+        self.__init_date_part()
 
         self.init_multi_select_list()
 
@@ -67,6 +72,34 @@ class MainWindow(QMainWindow):
         # 布局组合
         main_layout.addLayout(self.left_panel, 1)
         main_layout.addWidget(self.log_output, 3)
+
+    def __init_date_part(self):
+        # 填写日期，限制格式，比如"20250312"
+        self.date_edit = QLineEdit()  # 使用 QLineEdit 替代 QTextEdit
+        self.date_edit.setMaximumHeight(30)
+        # 定义日期格式的正则表达式
+        date_regex = QRegExp(r'^\d{8}$')
+        date_validator = QRegExpValidator(date_regex, self.date_edit)
+
+        # 设置验证器到输入框
+        self.date_edit.setValidator(date_validator)
+
+        # 获取当前日期并格式化为 YYYYMMDD 格式
+        today = datetime.today().strftime("%Y%m%d")
+        # 设置默认日期
+        self.date_edit.setText(today)
+
+        # 添加到左侧控制面板
+        self.left_panel.addWidget(QLabel("输入日志日期 (YYYYMMDD), 例如:20250312"))
+        self.left_panel.addWidget(self.date_edit)
+
+    def get_date_input(self):
+        """
+        获取 date_edit 输入框中填写的日期。
+
+        :return: 输入的日期字符串，如果输入框为空则返回空字符串。
+        """
+        return self.date_edit.text()
 
     def __init_multi_select_list_part(self):
         """

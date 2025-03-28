@@ -196,7 +196,7 @@ class ADBTools:
         """
         try:
             logging.info(f"Pulling logs matching pattern: {pattern}")
-            # 构建用于查找日志文件的 ADB 命令
+            # 获取通过正则表达式过滤出来的日志文件
             list_cmd = ['adb', '-s', device, 'shell', 'ls', pattern]
             # 执行查找命令并获取输出
             list_result = subprocess.check_output(list_cmd, text=True)
