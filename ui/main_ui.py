@@ -60,7 +60,7 @@ class MainWindow(QMainWindow):
         self.log_output.setReadOnly(True)
 
     def __init_btns(self):
-        self.pull_one_type_one_day_logs_btn = QPushButton('pull one type one day logs')
+        self.pull_one_type_one_day_logs_btn = QPushButton('pull 1 day logs')
         for btn in [
                     self.pull_one_type_one_day_logs_btn
                    ]:
