@@ -33,7 +33,7 @@ class DeviceController(QObject):
    
         self.ui.browse_btn.clicked.connect(self.get_selected_explorer_path)
         # 添加点击事件
-        self.ui.multi_select_list.itemSelectionChanged.connect(self.handle_multi_select_list_selection_changed)
+        self.ui.multi_select_list_view.itemSelectionChanged.connect(self.handle_multi_select_list_selection_changed)
      
         self.ui.pull_one_type_one_day_logs_btn.clicked.connect(self.pull_selected_logs_1_day)
         
@@ -42,9 +42,10 @@ class DeviceController(QObject):
         self.handle_refresh_devices()
         logging.info(f"默认保存路径: {self.ui.log_save_path}")
         self.adb_tools.set_selected_windows_path(self.ui.log_save_path)
-        self.log_categorys = []
-        self.log_categorys = self.adb_tools.get_log_categorys(self.devices[0])
-        self.ui.update_multi_select_list(self.log_categorys)
+        self.all_log_categorys = []
+        self.all_log_categorys = self.adb_tools.get_log_categorys(self.devices[0])
+        self.ui.init_multi_select_list_items(self.all_log_categorys)
+        self.selected_logs_categorys = [] # 当前选中的日志类型
 
     def pull_all_logs_wrapper(self):
         self.log_category_manager.pull_all_logs_wrapper(self.devices[0])
@@ -55,16 +56,24 @@ class DeviceController(QObject):
 
             if not self.devices:
                 logging.error("No devices connected")
+                # 添加弹窗提示
+                self.ui.show_message_box("No devices connected")
                 return
             
             # 获取填写的日期
             self.date = self.ui.date_edit.text()
             if not self.date:
                 logging.error("No date selected")
+                self.ui.show_message_box("No date selected")
+                return
+            
+            if not self.selected_logs_categorys:
+                logging.error("No log categories selected")
+                self.ui.show_message_box("No log categories selected")
                 return
             
             logging.info("Pulling logs for selected items")
-            self.log_category_manager.pull_selected_logs_1_day(self.devices[0],self.log_categorys,self.date)
+            self.log_category_manager.pull_selected_logs_1_day(self.devices[0],self.selected_logs_categorys,self.date)
         except Exception as e:
             logging.error(f"拉取日志失败: {str(e)}")
 
@@ -75,7 +84,8 @@ class DeviceController(QObject):
         
     def handle_multi_select_list_selection_changed(self):
         """处理多选列表选择变化"""
-        selected_items = [item.text() for item in self.ui.multi_select_list.selectedItems()]
+        selected_items = [item.text() for item in self.ui.multi_select_list_view.selectedItems()]
+        self.selected_logs_categorys = selected_items
         logging.info(f"Selected items: {selected_items}")
         # 把选中的日志类型传递给adb_tools
         self.adb_tools.set_selected_log_categorys(selected_items)

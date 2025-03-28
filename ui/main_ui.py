@@ -7,7 +7,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # Then modify the problematic import
 import logging
 from datetime import datetime
-from PyQt5.QtWidgets import  QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QListWidget, QPushButton, QTextEdit,QLabel,QFileDialog,QLineEdit
+from PyQt5.QtWidgets import QMessageBox, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QListWidget,QPushButton, QTextEdit,QLabel,QFileDialog,QLineEdit
 from PyQt5.QtGui import QRegExpValidator
 from PyQt5.QtCore import QRegExp
 
@@ -41,37 +41,31 @@ class MainWindow(QMainWindow):
         # 左侧控制面板
         self.left_panel = QVBoxLayout()
         logging.debug('Left panel created')
-
-    
-        self.__init_multi_select_list_part()
-       
+        self.__init_devices_list_part()
 
         # 日志导出路径
-        self.init_explorer()
+        self.__init_explorer()
         self.__init_date_part()
-
-        self.init_multi_select_list()
-
-        
-    
-        self.pull_all_logs_btn = QPushButton('pull all logs for selected items')
-        self.pull_one_type_one_day_logs_btn = QPushButton('pull one type one day logs')
-        logging.debug('Buttons created')
-
-        for btn in [
-                    self.pull_all_logs_btn,
-                    self.pull_one_type_one_day_logs_btn
-                   ]:
-            self.left_panel.addWidget(btn)
-            btn.setMinimumHeight(40)
-
-        # 右侧日志显示
-        self.log_output = QTextEdit()
-        self.log_output.setReadOnly(True)
+        self.__init_multi_select_list()
+        self.__init_btns()
+        self.__init_right_panel()     
 
         # 布局组合
         main_layout.addLayout(self.left_panel, 1)
         main_layout.addWidget(self.log_output, 3)
+
+    def __init_right_panel(self):
+    # 右侧日志显示
+        self.log_output = QTextEdit()
+        self.log_output.setReadOnly(True)
+
+    def __init_btns(self):
+        self.pull_one_type_one_day_logs_btn = QPushButton('pull one type one day logs')
+        for btn in [
+                    self.pull_one_type_one_day_logs_btn
+                   ]:
+            self.left_panel.addWidget(btn)
+            btn.setMinimumHeight(40)
 
     def __init_date_part(self):
         # 填写日期，限制格式，比如"20250312"
@@ -101,7 +95,7 @@ class MainWindow(QMainWindow):
         """
         return self.date_edit.text()
 
-    def __init_multi_select_list_part(self):
+    def __init_devices_list_part(self):
         """
         初始化设备列表和刷新按钮，并添加到左侧控制面板。
         """
@@ -118,18 +112,18 @@ class MainWindow(QMainWindow):
         self.left_panel.addWidget(self.refresh_btn)
 
 
-    def init_multi_select_list(self):
+    def __init_multi_select_list(self):
               # 新增多选列表（放在设备列表下方）
-        self.multi_select_list = QListWidget()
-        self.multi_select_list.setSelectionMode(QListWidget.MultiSelection)  # 设置为多选模式
+        self.multi_select_list_view = QListWidget()
+        self.multi_select_list_view.setSelectionMode(QListWidget.MultiSelection)  # 设置为多选模式
         self.left_panel.addWidget(QLabel("可选项目:"))
-        self.left_panel.addWidget(self.multi_select_list)
+        self.left_panel.addWidget(self.multi_select_list_view)
 
-    def update_multi_select_list(self, items):
+    def init_multi_select_list_items(self, items):
         # 清空列表
-        self.multi_select_list.clear()
+        self.multi_select_list_view.clear()
         # 直接将 items 中的元素逐个添加到列表中
-        self.multi_select_list.addItems(items)  
+        self.multi_select_list_view.addItems(items)  
    
     def _load_config(self):
         """加载配置文件"""
@@ -153,7 +147,7 @@ class MainWindow(QMainWindow):
         except Exception as e:
             print(f"保存配置文件失败: {e}")
     
-    def init_explorer(self):
+    def __init_explorer(self):
         """ 初始化文件浏览器 """
         
         # 新增日志路径组件（放在设备列表下方）
@@ -182,7 +176,7 @@ class MainWindow(QMainWindow):
 
     def get_selected_items(self):
         """ 获取当前选中的项目 """
-        return [item.text() for item in self.multi_select_list.selectedItems()]
+        return [item.text() for item in self.multi_select_list_view.selectedItems()]
     
 
 
@@ -195,3 +189,6 @@ class MainWindow(QMainWindow):
             self.log_path_edit.setText(path)
             self._save_config()  # 保存新路径
         return path
+    
+    def show_message_box(self, message):
+        QMessageBox.warning(self, "Warning", message, QMessageBox.Ok)
